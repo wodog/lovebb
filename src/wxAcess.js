@@ -2,8 +2,23 @@ var http = require('http');
 var url = require('url');
 var querystring = require('querystring');
 var xml2js = require('xml2js');
+var Sentence = require('./sentence.js');
+var async = require('async');
 
+/*
+var getContent = function(seq){
+	Sentence.findOne({seq:seq}, function(err, data){
+			if(err) throw err;
+			console.log(data);
+			console.log(data.content);
+			return data.content;
+	});
+}
+*/
 
+var getSeq = function(){
+	return Math.ceil(Math.random()*5);
+}
 
 var server = http.createServer(function(req, res) {
     console.log(req.method);
@@ -20,10 +35,22 @@ var server = http.createServer(function(req, res) {
             console.log(post);
             xml2js.parseString(post, function(err, result) {
                 console.log(result);
-                var reply = '<xml><ToUserName><![CDATA[' + result.xml.FromUserName + ']]></ToUserName><FromUserName><![CDATA[' + result.xml.ToUserName + ']]></FromUserName><CreateTime>12345678</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[你好]]></Content></xml>';
-                console.log(reply);
-
-                res.end(reply);
+		var content = '';
+		async.waterfall([
+			function(callback){
+				callback(null, getSeq());
+			},
+			function(seq, callback){
+				Sentence.findOne({seq:seq}, function(err, data) {
+					if(err) throw err;
+					callback(null, data.content);
+				});
+			}
+		], function(err, data) {
+			var reply = '<xml><ToUserName><![CDATA[' + result.xml.FromUserName + ']]></ToUserName><FromUserName><![CDATA[' + result.xml.ToUserName + ']]></FromUserName><CreateTime>12345678</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['+data+']]></Content></xml>';
+            	   	console.log(reply);
+           		res.end(reply);
+		});
             });
         });
 
