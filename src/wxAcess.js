@@ -17,7 +17,7 @@ var getContent = function(seq){
 */
 
 var getSeq = function(){
-	return Math.ceil(Math.random()*5);
+	return Math.ceil(Math.random()*73);
 }
 
 var server = http.createServer(function(req, res) {
